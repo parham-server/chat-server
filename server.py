@@ -71,6 +71,18 @@ def save_user():
     conn.commit()
     return jsonify({"status": "ok"})
 
+@app.route("/delete/<f_name>", methods=["DELETE"])
+def delete_user(f_name):
+    cursor.execute("SELECT * FROM users WHERE f_name = %s", (f_name,))
+    if cursor.fetchone() is None:
+        return jsonify({"error": "User not found"}), 404
+
+    cursor.execute("DELETE FROM users WHERE f_name = %s", (f_name,))
+    conn.commit()
+    return jsonify({"status": f"User '{f_name}' deleted successfully"})
+
+
+
 @app.route("/rece", methods=["GET"])
 def get_all_users():
     cur = conn.cursor(cursor_factory=RealDictCursor)
