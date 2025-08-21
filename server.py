@@ -63,7 +63,7 @@ conn.commit()
 
 
 # ---------------------------
-# مسیر ذخیره یا آپدیت اطلاعات کاربر
+# ذخیره یا آپدیت اطلاعات کاربر
 # ---------------------------
 @app.route("/send", methods=["POST"])
 def save_user():
@@ -73,24 +73,28 @@ def save_user():
     if not f_name or not data:
         return jsonify({"error": "Invalid data"}), 400
 
-    cursor.execute("DELETE FROM users WHERE f_name = %s", (f_name,))
-    cursor.execute("""
-        INSERT INTO users VALUES (
-            %(f_name)s, %(Name)s, %(Email)s, %(tel)s,
-            %(birth_d)s, %(inter_d)s, %(tamid_d)s, %(profession)s,
-            %(khedmat_r)s, %(tel_code)s, %(instagram)s,
-            %(khedmat1)s, %(khedmat_v1)s, %(khedmat_p1)s,
-            %(khedmat2)s, %(khedmat_v2)s, %(khedmat_p2)s,
-            %(khedmat3)s, %(khedmat_v3)s, %(khedmat_p3)s,
-            %(letter1)s, %(letter2)s, %(letter3)s
-        )
-    """, {"f_name": f_name, **data})
-    conn.commit()
-    return jsonify({"status": "ok"})
+    try:
+        cursor.execute("DELETE FROM users WHERE f_name = %s", (f_name,))
+        cursor.execute("""
+            INSERT INTO users VALUES (
+                %(f_name)s, %(Name)s, %(Email)s, %(tel)s,
+                %(birth_d)s, %(inter_d)s, %(tamid_d)s, %(profession)s,
+                %(khedmat_r)s, %(tel_code)s, %(instagram)s,
+                %(khedmat1)s, %(khedmat_v1)s, %(khedmat_p1)s,
+                %(khedmat2)s, %(khedmat_v2)s, %(khedmat_p2)s,
+                %(khedmat3)s, %(khedmat_v3)s, %(khedmat_p3)s,
+                %(letter1)s, %(letter2)s, %(letter3)s
+            )
+        """, {"f_name": f_name, **data})
+        conn.commit()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------
-# مسیر ذخیره یا آپدیت پسورد کاربر
+# ذخیره یا آپدیت پسورد کاربر
 # ---------------------------
 @app.route("/sendpass", methods=["POST"])
 def save_user_password():
@@ -101,10 +105,7 @@ def save_user_password():
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        # اول مطمئن میشیم رکورد قبلی حذف بشه
         cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
-        
-        # اینجا باید همه ستون‌ها رو مقدار بدی (۹ تا ستون)
         cursor_pass.execute("""
             INSERT INTO user_passwords (
                 passwords, pass1, pass2, pass3, pass4, pass5, passcall, passdelete, passedit
@@ -113,17 +114,15 @@ def save_user_password():
                 %(passcall)s, %(passdelete)s, %(passedit)s
             )
         """, {"passwords": passwords, **data})
-        
         conn.commit()
         return jsonify({"status": "ok"})
-    
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------
-# مسیر حذف کاربر
+# حذف کاربر
 # ---------------------------
 @app.route("/delete/<f_name>", methods=["DELETE"])
 def delete_user(f_name):
@@ -137,7 +136,7 @@ def delete_user(f_name):
 
 
 # ---------------------------
-# مسیر حذف پسورد کاربر
+# حذف پسورد کاربر
 # ---------------------------
 @app.route("/deletepass/<passwords>", methods=["DELETE"])
 def delete_user_password(passwords):
@@ -151,7 +150,7 @@ def delete_user_password(passwords):
 
 
 # ---------------------------
-# مسیر دریافت تمام کاربران
+# دریافت تمام کاربران
 # ---------------------------
 @app.route("/rece", methods=["GET"])
 def get_all_users():
@@ -163,13 +162,17 @@ def get_all_users():
 
 
 # ---------------------------
-# مسیر دریافت تمام پسوردها
+# دریافت تمام پسوردها
 # ---------------------------
 @app.route("/recepass", methods=["GET"])
 def get_all_passwords():
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM user_passwords")
     rows = cur.fetchall()
+    
+    if not rows:
+        return jsonify({})
+    
     data = {row["passwords"]: row for row in rows}
     return jsonify(data)
 
@@ -178,8 +181,4 @@ def get_all_passwords():
 # اجرای سرور
 # ---------------------------
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)  # تغییر پورت
-
-
-
-
+    app.run(debug=True, host="0.0.0.0", port=5000)
