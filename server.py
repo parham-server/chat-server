@@ -100,14 +100,26 @@ def save_user_password():
     if not passwords or not data:
         return jsonify({"error": "Invalid data"}), 400
 
-    cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
-    cursor_pass.execute("""
-        INSERT INTO user_passwords VALUES (
-        %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, %(passcall)s, %(passdelete)s, %(passedit)s
-        )
-    """, {"passwords": passwords, **data})
-    conn.commit()
-    return jsonify({"status": "ok"})
+    try:
+        # اول مطمئن میشیم رکورد قبلی حذف بشه
+        cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
+        
+        # اینجا باید همه ستون‌ها رو مقدار بدی (۹ تا ستون)
+        cursor_pass.execute("""
+            INSERT INTO user_passwords (
+                passwords, pass1, pass2, pass3, pass4, pass5, passcall, passdelete, passedit
+            ) VALUES (
+                %(passwords)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, 
+                %(passcall)s, %(passdelete)s, %(passedit)s
+            )
+        """, {"passwords": passwords, **data})
+        
+        conn.commit()
+        return jsonify({"status": "ok"})
+    
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------
@@ -167,6 +179,7 @@ def get_all_passwords():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)  # تغییر پورت
+
 
 
 
