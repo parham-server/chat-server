@@ -95,17 +95,17 @@ def save_user():
 @app.route("/sendpass", methods=["POST"])
 def save_user_password():
     data = request.json.get("message", {})
-    passworda = request.json.get("user")
+    passwords = request.json.get("user")
 
-    if not passworda or not data:
+    if not passwords or not data:
         return jsonify({"error": "Invalid data"}), 400
 
-    cursor_pass.execute("DELETE FROM user_passwords WHERE passworda = %s", (passwords,))
+    cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
     cursor_pass.execute("""
         INSERT INTO user_passwords VALUES (
         %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, %(passcall)s, %(passdelete)s, %(passedit)s
         )
-    """, {"passworda": passworda, **data})
+    """, {"passwords": passwords, **data})
     conn.commit()
     return jsonify({"status": "ok"})
 
@@ -127,8 +127,8 @@ def delete_user(f_name):
 # ---------------------------
 # مسیر حذف پسورد کاربر
 # ---------------------------
-@app.route("/deletepass/<passworda>", methods=["DELETE"])
-def delete_user_password(passworda):
+@app.route("/deletepass/<passwords>", methods=["DELETE"])
+def delete_user_password(passwords):
     cursor_pass.execute("SELECT * FROM user_passwords WHERE passwords = %s", (passwords,))
     if cursor_pass.fetchone() is None:
         return jsonify({"error": "Password not found"}), 404
@@ -167,5 +167,6 @@ def get_all_passwords():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)  # تغییر پورت
+
 
 
