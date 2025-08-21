@@ -170,11 +170,20 @@ def get_all_passwords():
     cur.execute("SELECT * FROM user_passwords")
     rows = cur.fetchall()
     
+    # اضافه کردن لاگ برای بررسی رکوردها
+    print("rows from user_passwords:", rows)
+    
     if not rows:
         return jsonify({})
     
-    data = {row["passwords"]: row for row in rows}
+    data = {}
+    for row in rows:
+        # مطمئن می‌شیم کلید وجود داره
+        key = row.get("passwords")
+        if key:
+            data[key] = row
     return jsonify(data)
+
 
 
 # ---------------------------
@@ -182,3 +191,4 @@ def get_all_passwords():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
