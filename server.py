@@ -100,10 +100,10 @@ def save_user_password():
     if not passworda or not data:
         return jsonify({"error": "Invalid data"}), 400
 
-    cursor_pass.execute("DELETE FROM user_passwords WHERE passworda = %s", (passworda,))
+    cursor_pass.execute("DELETE FROM user_passwords WHERE passworda = %s", (passwords,))
     cursor_pass.execute("""
         INSERT INTO user_passwords VALUES (
-            %(passworda)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, %(passcall)s, %(passdelete)s, %(passedit)s
+        %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, %(passcall)s, %(passdelete)s, %(passedit)s
         )
     """, {"passworda": passworda, **data})
     conn.commit()
@@ -129,13 +129,13 @@ def delete_user(f_name):
 # ---------------------------
 @app.route("/deletepass/<passworda>", methods=["DELETE"])
 def delete_user_password(passworda):
-    cursor_pass.execute("SELECT * FROM user_passwords WHERE passworda = %s", (passworda,))
+    cursor_pass.execute("SELECT * FROM user_passwords WHERE passwords = %s", (passwords,))
     if cursor_pass.fetchone() is None:
         return jsonify({"error": "Password not found"}), 404
 
-    cursor_pass.execute("DELETE FROM user_passwords WHERE passworda = %s", (passworda,))
+    cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
     conn.commit()
-    return jsonify({"status": f"Password '{passworda}' deleted successfully"})
+    return jsonify({"status": f"Password '{passwords}' deleted successfully"})
 
 
 # ---------------------------
@@ -158,7 +158,7 @@ def get_all_passwords():
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT * FROM user_passwords")
     rows = cur.fetchall()
-    data = {row["passworda"]: row for row in rows}
+    data = {row["passwords"]: row for row in rows}
     return jsonify(data)
 
 
@@ -167,4 +167,5 @@ def get_all_passwords():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)  # تغییر پورت
+
 
