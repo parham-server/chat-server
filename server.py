@@ -48,7 +48,7 @@ conn.commit()
 # ایجاد جدول user_passwords
 cursor_pass.execute("""
 CREATE TABLE IF NOT EXISTS user_passwords (
-    passworda TEXT PRIMARY KEY,
+    passwords TEXT PRIMARY KEY,
     pass1 TEXT,
     pass2 TEXT,
     pass3 TEXT,
