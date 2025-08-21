@@ -53,7 +53,10 @@ CREATE TABLE IF NOT EXISTS user_passwords (
     pass2 TEXT,
     pass3 TEXT,
     pass4 TEXT,
-    pass5 TEXT
+    pass5 TEXT,
+    passcall TEXT,
+    passdelete TEXT,
+    passedit TEXT
 )
 """)
 conn.commit()
@@ -100,7 +103,7 @@ def save_user_password():
     cursor_pass.execute("DELETE FROM user_passwords WHERE passworda = %s", (passworda,))
     cursor_pass.execute("""
         INSERT INTO user_passwords VALUES (
-            %(passworda)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s
+            %(passworda)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, %(passcall)s, %(passdelete)s, %(passedit)s
         )
     """, {"passworda": passworda, **data})
     conn.commit()
@@ -164,3 +167,4 @@ def get_all_passwords():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)  # تغییر پورت
+
