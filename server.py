@@ -101,46 +101,36 @@ def save_user_password():
     data = request.json.get("message", {})
     passworda = request.json.get("user")
 
-    if not passworda or not isinstance(data, dict):
+    if not passworda or not data:
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        # ستون‌های معتبر جدول
-        all_columns = ["pass1","pass2","pass3","pass4","pass5","passcall","passdelete","passedit"]
+        # بررسی وجود رکورد
+        cursor_pass.execute("SELECT * FROM user_passworda WHERE passworda = %s", (passworda,))
+        existing = cursor_pass.fetchone()
 
-        # آماده کردن داده فقط برای ستون‌های معتبر
-        update_data = {col: data[col] for col in all_columns if col in data}
-
-        if not update_data:
-            return jsonify({"error": "No valid columns to update"}), 400
-
-        # بررسی اینکه رکورد وجود دارد یا نه
-        cursor_pass.execute("SELECT 1 FROM user_passworda WHERE passworda = %s", (passworda,))
-        exists = cursor_pass.fetchone()
-
-        if exists:
-            # آپدیت فقط ستون‌های فرستاده شده
-            set_clause = ", ".join([f"{col} = %({col})s" for col in update_data])
+        if existing:
+            # رکورد هست → فقط ستون‌های ارسال شده آپدیت شوند
+            set_clause = ", ".join([f"{col} = %({col})s" for col in data])
             query = f"UPDATE user_passworda SET {set_clause} WHERE passworda = %(passworda)s"
-            cursor_pass.execute(query, {"passworda": passworda, **update_data})
+            cursor_pass.execute(query, {"passworda": passworda, **data})
         else:
-            # رکورد وجود ندارد → درج همه ستون‌ها، ستون‌هایی که ارسال نشده خالی می‌شوند
-            insert_data = {col: data.get(col, "") for col in all_columns}
-            insert_data["passworda"] = passworda
-            cols = ", ".join(insert_data.keys())
-            vals = ", ".join([f"%({col})s" for col in insert_data])
+            # رکورد نیست → ایجاد رکورد کامل
+            all_columns = ["pass1","pass2","pass3","pass4","pass5","passcall","passdelete","passedit"]
+            # هر ستون که داده نشده باشد، خالی بگذار
+            full_data = {col: data.get(col, "") for col in all_columns}
+            full_data["passworda"] = passworda
+            cols = ", ".join(full_data.keys())
+            vals = ", ".join([f"%({col})s" for col in full_data.keys()])
             query = f"INSERT INTO user_passworda ({cols}) VALUES ({vals})"
-            cursor_pass.execute(query, insert_data)
+            cursor_pass.execute(query, full_data)
 
         conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
         conn.rollback()
-        # چاپ خطا در کنسول سرور برای دیباگ
-        print("Error in /sendpass:", e)
         return jsonify({"error": str(e)}), 500
 
-# ---------------------------
 # حذف کاربر
 # ---------------------------
 @app.route("/delete/<f_name>", methods=["DELETE"])
@@ -210,6 +200,7 @@ def get_all_passworda():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
 
 
 
