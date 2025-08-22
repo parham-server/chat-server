@@ -105,21 +105,35 @@ def save_user_password():
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        cursor_pass.execute("DELETE FROM user_passworda WHERE passworda = %s", (passworda,))
-        cursor_pass.execute("""
-            INSERT INTO user_passworda (
-                passworda, pass1, pass2, pass3, pass4, pass5, passcall, passdelete, passedit
-            ) VALUES (
-                %(passworda)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, 
-                %(passcall)s, %(passdelete)s, %(passedit)s
-            )
-        """, {"passworda": passworda, **data})
+        # ستون‌های جدول
+        all_columns = ["pass1","pass2","pass3","pass4","pass5","passcall","passdelete","passedit"]
+        
+        # آماده کردن همه ستون‌ها با مقدار پیش‌فرض
+        for col in all_columns:
+            if col not in data:
+                data[col] = ""
+        
+        # بررسی اینکه رکورد قبلاً وجود دارد یا نه
+        cursor_pass.execute("SELECT 1 FROM user_passworda WHERE passworda = %s", (passworda,))
+        exists = cursor_pass.fetchone()
+        
+        if exists:
+            # رکورد هست → آپدیت فقط ستون‌های ارسالی
+            set_clause = ", ".join([f"{col} = %({col})s" for col in data])
+            query = f"UPDATE user_passworda SET {set_clause} WHERE passworda = %(passworda)s"
+            cursor_pass.execute(query, {"passworda": passworda, **data})
+        else:
+            # رکورد نیست → INSERT با همه ستون‌ها
+            cols = ", ".join(["passworda"] + all_columns)
+            vals = ", ".join([f"%({col})s" for col in ["passworda"] + all_columns])
+            query = f"INSERT INTO user_passworda ({cols}) VALUES ({vals})"
+            cursor_pass.execute(query, {"passworda": passworda, **data})
+
         conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
-
 
 # ---------------------------
 # حذف کاربر
@@ -191,5 +205,6 @@ def get_all_passworda():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
 
 
