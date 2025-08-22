@@ -101,38 +101,43 @@ def save_user_password():
     data = request.json.get("message", {})
     passworda = request.json.get("user")
 
-    if not passworda or not data:
+    if not passworda or not isinstance(data, dict):
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        # ستون‌های جدول
+        # ستون‌های معتبر جدول
         all_columns = ["pass1","pass2","pass3","pass4","pass5","passcall","passdelete","passedit"]
-        
-        # آماده کردن همه ستون‌ها با مقدار پیش‌فرض
-        for col in all_columns:
-            if col not in data:
-                data[col] = ""
-        
-        # بررسی اینکه رکورد قبلاً وجود دارد یا نه
+
+        # آماده کردن داده فقط برای ستون‌های معتبر
+        update_data = {col: data[col] for col in all_columns if col in data}
+
+        if not update_data:
+            return jsonify({"error": "No valid columns to update"}), 400
+
+        # بررسی اینکه رکورد وجود دارد یا نه
         cursor_pass.execute("SELECT 1 FROM user_passworda WHERE passworda = %s", (passworda,))
         exists = cursor_pass.fetchone()
-        
+
         if exists:
-            # رکورد هست → آپدیت فقط ستون‌های ارسالی
-            set_clause = ", ".join([f"{col} = %({col})s" for col in data])
+            # آپدیت فقط ستون‌های فرستاده شده
+            set_clause = ", ".join([f"{col} = %({col})s" for col in update_data])
             query = f"UPDATE user_passworda SET {set_clause} WHERE passworda = %(passworda)s"
-            cursor_pass.execute(query, {"passworda": passworda, **data})
+            cursor_pass.execute(query, {"passworda": passworda, **update_data})
         else:
-            # رکورد نیست → INSERT با همه ستون‌ها
-            cols = ", ".join(["passworda"] + all_columns)
-            vals = ", ".join([f"%({col})s" for col in ["passworda"] + all_columns])
+            # رکورد وجود ندارد → درج همه ستون‌ها، ستون‌هایی که ارسال نشده خالی می‌شوند
+            insert_data = {col: data.get(col, "") for col in all_columns}
+            insert_data["passworda"] = passworda
+            cols = ", ".join(insert_data.keys())
+            vals = ", ".join([f"%({col})s" for col in insert_data])
             query = f"INSERT INTO user_passworda ({cols}) VALUES ({vals})"
-            cursor_pass.execute(query, {"passworda": passworda, **data})
+            cursor_pass.execute(query, insert_data)
 
         conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
         conn.rollback()
+        # چاپ خطا در کنسول سرور برای دیباگ
+        print("Error in /sendpass:", e)
         return jsonify({"error": str(e)}), 500
 
 # ---------------------------
@@ -205,6 +210,7 @@ def get_all_passworda():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
 
 
 
