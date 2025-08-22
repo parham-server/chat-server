@@ -45,10 +45,10 @@ CREATE TABLE IF NOT EXISTS users (
 """)
 conn.commit()
 
-# ایجاد جدول user_passwords
+# ایجاد جدول user_passworda
 cursor_pass.execute("""
-CREATE TABLE IF NOT EXISTS user_passwords (
-    passwords TEXT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS user_passworda (
+    passworda TEXT PRIMARY KEY,
     pass1 TEXT,
     pass2 TEXT,
     pass3 TEXT,
@@ -99,21 +99,21 @@ def save_user():
 @app.route("/sendpass", methods=["POST"])
 def save_user_password():
     data = request.json.get("message", {})
-    passwords = request.json.get("user")
+    passworda = request.json.get("user")
 
-    if not passwords or not data:
+    if not passworda or not data:
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
+        cursor_pass.execute("DELETE FROM user_passworda WHERE passworda = %s", (passworda,))
         cursor_pass.execute("""
-            INSERT INTO user_passwords (
-                passwords, pass1, pass2, pass3, pass4, pass5, passcall, passdelete, passedit
+            INSERT INTO user_passworda (
+                passworda, pass1, pass2, pass3, pass4, pass5, passcall, passdelete, passedit
             ) VALUES (
-                %(passwords)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, 
+                %(passworda)s, %(pass1)s, %(pass2)s, %(pass3)s, %(pass4)s, %(pass5)s, 
                 %(passcall)s, %(passdelete)s, %(passedit)s
             )
-        """, {"passwords": passwords, **data})
+        """, {"passworda": passworda, **data})
         conn.commit()
         return jsonify({"status": "ok"})
     except Exception as e:
@@ -138,15 +138,15 @@ def delete_user(f_name):
 # ---------------------------
 # حذف پسورد کاربر
 # ---------------------------
-@app.route("/deletepass/<passwords>", methods=["DELETE"])
-def delete_user_password(passwords):
-    cursor_pass.execute("SELECT * FROM user_passwords WHERE passwords = %s", (passwords,))
+@app.route("/deletepass/<passworda>", methods=["DELETE"])
+def delete_user_password(passworda):
+    cursor_pass.execute("SELECT * FROM user_passworda WHERE passworda = %s", (passworda,))
     if cursor_pass.fetchone() is None:
         return jsonify({"error": "Password not found"}), 404
 
-    cursor_pass.execute("DELETE FROM user_passwords WHERE passwords = %s", (passwords,))
+    cursor_pass.execute("DELETE FROM user_passworda WHERE passworda = %s", (passworda,))
     conn.commit()
-    return jsonify({"status": f"Password '{passwords}' deleted successfully"})
+    return jsonify({"status": f"Password '{passworda}' deleted successfully"})
 
 
 # ---------------------------
@@ -165,13 +165,13 @@ def get_all_users():
 # دریافت تمام پسوردها
 # ---------------------------
 @app.route("/recepass", methods=["GET"])
-def get_all_passwords():
+def get_all_passworda():
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT * FROM user_passwords")
+    cur.execute("SELECT * FROM user_passworda")
     rows = cur.fetchall()
     
     # اضافه کردن لاگ برای بررسی رکوردها
-    print("rows from user_passwords:", rows)
+    print("rows from user_passworda:", rows)
     
     if not rows:
         return jsonify({})
@@ -179,7 +179,7 @@ def get_all_passwords():
     data = {}
     for row in rows:
         # مطمئن می‌شیم کلید وجود داره
-        key = row.get("passwords")
+        key = row.get("passworda")
         if key:
             data[key] = row
     return jsonify(data)
@@ -191,4 +191,5 @@ def get_all_passwords():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
 
