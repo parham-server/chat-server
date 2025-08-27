@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # اتصال به دیتابیس PostgreSQL
 conn = psycopg2.connect(
-    host='dpg-d2381femcj7s73d8sbdg-a.oregon-postgres.render.com',
+    host='dpg-d2381femcj7s73d8sbdg-a',
     database='parham',
     user='parham_user',
     password='ku5Ke7mDuTlAvCMWXy7KeTO6DwArAWtl',
