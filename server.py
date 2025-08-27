@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # اتصال به دیتابیس PostgreSQL
 conn = psycopg2.connect(
-    host='dpg-d2381femcj7s73d8sbdg-a',
+    host='dpg-d2381femcj7s73d8sbdg-a.oregon-postgres.render.com',
     database='parham',
     user='parham_user',
     password='ku5Ke7mDuTlAvCMWXy7KeTO6DwArAWtl',
@@ -200,6 +200,7 @@ def get_all_passworda():
 # ---------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
 
 
 
